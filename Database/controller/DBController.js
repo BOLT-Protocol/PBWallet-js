@@ -1,8 +1,7 @@
-const ipc = require('electron').ipcMain;
 const axios = require('axios');
+const Emitter = require('events').EventEmitter;
 const DB = require('./Database');
 const ASSETDB = require('./AssetDatabase');
-const atLog = require('../ATWalletKit/at_log');
 
 let dbInstance;
 
@@ -58,11 +57,8 @@ class DBController {
   constructor(App) {
     this.App = App;
     this.DB = new DB(App);
-    this.window = null;
-    this.TxDB = new TXDB(this.DB);
-    this.UTXODB = new UTXODB(this.DB);
-    this.APPDB = new AppInforDB(this.DB);
     this.AssetDB = new ASSETDB(this.DB);
+    this.em = new Emitter();
   }
 
   createDB(name) {
@@ -77,11 +73,11 @@ class DBController {
       .then(() => this.APPDB.createTable())
       .then(() => this.AssetDB.createTable())
       .then(() => {
-        atLog.debug('Create All Table Success');
+        console.log('Create All Table Success');
         return Promise.resolve(true);
       })
       .catch((e) => {
-        atLog.debug('Create Fail', e);
+        console.log('Create Fail', e);
         return Promise.resolve(false);
       })
       .then((result) => {
@@ -99,7 +95,7 @@ class DBController {
     * @param Tx[]  args  transaction array [{ hash, from, to, value, currency, timestamp, owner }]
     */
 
-    ipc.on('GET_ASSETS', () => {
+    this.em.on('GET_ASSETS', () => {
       this.AssetDB.getAssetFetchCatchTimestamp()
         .then((rs = {}) => {
           const { updatTime = 0 } = rs;
@@ -107,18 +103,18 @@ class DBController {
           const expiredTime = Math.floor(nowTime) - 24 * 60 * 60 * 1000;
 
           if (updatTime && updatTime > expiredTime) {
-            atLog.debug('GET_ASSETS find by catch');
+            console.log('GET_ASSETS find by catch');
 
             Promise.all([this.AssetDB.getAllryptoAsset(false), this.AssetDB.getAllryptoAsset(true)])
               .then(([fiatsData, assetsData]) => {
-                this.window.send('GET_ASSETS', { success: true, fiatsData, assetsData });
+                this.em.emit('GET_ASSETS', { success: true, fiatsData, assetsData });
               })
               .catch((e) => {
-                atLog.debug('GET_ASSETS error:', e);
-                this.window.send('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
+                console.log('GET_ASSETS error:', e);
+                this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
               });
           } else {
-            atLog.debug('GET_ASSETS catch timeout, update assetList');
+            console.log('GET_ASSETS catch timeout, update assetList');
             // catch timeout, update assetList
             Promise.all([
               this.AssetDB.updateAssetFetchCatchTimestamp(),
@@ -128,7 +124,7 @@ class DBController {
               .then(([updateCatch, fiatsResponse, asssetsResponse]) => {
                 if (!updateCatch.id) {
                 // update catch error, retry again
-                  atLog.debug('update catch error, retry again!!!!!');
+                  console.log('update catch error, retry again!!!!!');
                   this.AssetDB.updateAssetFetchCatchTimestamp();
                 }
                 const fiatsData = fiatsResponse.data;
@@ -137,73 +133,73 @@ class DBController {
                 // write in db
                 Promise.all(assets.map((item) => this.AssetDB.updateAsset(item._id, item.assetId, item.cryptoType, item.name, item.originalSymbol)))
                   .then((res) => {
-                    atLog.debug('updateAsset Success');
-                    this.window.send('GET_ASSETS', { success: true, fiatsData, assetsData });
+                    console.log('updateAsset Success');
+                    this.em.emit('GET_ASSETS', { success: true, fiatsData, assetsData });
                   })
                   .catch((e) => {
-                    atLog.debug('updateAsset Fail');
-                    this.window.send('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
+                    console.log('updateAsset Fail');
+                    this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
                   });
               })
               .catch((e) => {
-                atLog.debug('GET_ASSETS error:', e);
-                this.window.send('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
+                console.log('GET_ASSETS error:', e);
+                this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
               });
           }
         })
         .catch((e) => {
-          atLog.debug('GET_ASSETS find assetFeth catch time error:', e);
-          this.window.send('GET_ASSETS', { success: false });
+          console.log('GET_ASSETS find assetFeth catch time error:', e);
+          this.em.emit('GET_ASSETS', { success: false });
         });
     });
 
-    ipc.on('UPDATE_TX', (e, args) => {
+    this.em.on('UPDATE_TX', (e, args) => {
       Promise.all(args.map((tx) => this.TxDB.insert(tx)))
         .then((res) => {
-          atLog.debug('Insert Success');
+          console.log('Insert Success');
         })
         .catch((e) => {
-          atLog.debug('Insert Fail');
+          console.log('Insert Fail');
         });
     });
 
-    ipc.on('UPDATE_RATE', (e, { baseAsset, quoteAsset, weightedAveragePrice }) => {
+    this.em.on('UPDATE_RATE', (e, { baseAsset, quoteAsset, weightedAveragePrice }) => {
       this.TxDB.updateRate(baseAsset, quoteAsset, weightedAveragePrice)
         .then((data) => {
-          this.window.send('UPDATE_RATE', { success: true });
+          this.em.emit('UPDATE_RATE', { success: true });
         })
         .catch((e) => {
-          this.window.send('UPDATE_RATE', { success: false });
+          this.em.emit('UPDATE_RATE', { success: false });
         });
     });
 
-    ipc.on('UPDATE_WALLET_ACCOUNT_ADDRESS', (e, {
+    this.em.on('UPDATE_WALLET_ACCOUNT_ADDRESS', (e, {
       uuid, purpose, deviceId, address0, addressLast,
     }) => {
       this.TxDB.updateWalletAcountAddress(uuid, purpose, deviceId, address0, addressLast)
         .then((data) => {
-          this.window.send('UPDATE_WALLET_ACCOUNT_ADDRESS', { success: true });
+          this.em.emit('UPDATE_WALLET_ACCOUNT_ADDRESS', { success: true });
         })
         .catch((e) => {
-          this.window.send('UPDATE_WALLET_ACCOUNT_ADDRESS', { success: false });
+          this.em.emit('UPDATE_WALLET_ACCOUNT_ADDRESS', { success: false });
         });
     });
 
-    ipc.on('GET_ADDRESS_BY_WALLET_INFO', (e, { uuid, purpose, deviceId }) => {
+    this.em.on('GET_ADDRESS_BY_WALLET_INFO', (e, { uuid, purpose, deviceId }) => {
       this.TxDB.getAddresByWalletInfo(uuid, purpose, deviceId)
         .then((data) => {
           if (data) {
-            this.window.send('GET_ADDRESS_BY_WALLET_INFO', { success: true, data });
+            this.em.emit('GET_ADDRESS_BY_WALLET_INFO', { success: true, data });
           } else {
-            this.window.send('GET_ADDRESS_BY_WALLET_INFO', { success: false });
+            this.em.emit('GET_ADDRESS_BY_WALLET_INFO', { success: false });
           }
         })
         .catch((e) => {
-          this.window.send('GET_ADDRESS_BY_WALLET_INFO', { success: false });
+          this.em.emit('GET_ADDRESS_BY_WALLET_INFO', { success: false });
         });
     });
 
-    ipc.on('GET_RATE', (e, {
+    this.em.on('GET_RATE', (e, {
       baseAsset, quoteAsset, targetCurrency, isToken, tokenIndex,
     }) => {
       this.TxDB.getRate(baseAsset, quoteAsset)
@@ -211,24 +207,24 @@ class DBController {
           const nowTime = new Date();
           const expiredTime = Math.floor(nowTime) - 2 * 60 * 60 * 1000;
           if (data && data.updatTime > expiredTime) {
-            this.window.send('GET_RATE', {
+            this.em.emit('GET_RATE', {
               success: true, weightedAveragePrice: data.weightedAveragePrice, baseAsset, quoteAsset, targetCurrency, isToken, tokenIndex,
             });
           } else {
           // catch timeout
-            this.window.send('GET_RATE', {
+            this.em.emit('GET_RATE', {
               success: false, weightedAveragePrice: 0, baseAsset, quoteAsset, targetCurrency, isToken, tokenIndex,
             });
           }
         })
         .catch((e) => {
-          this.window.send('GET_RATE', {
+          this.em.emit('GET_RATE', {
             success: false, weightedAveragePrice: 0, baseAsset, quoteAsset, targetCurrency, isToken, tokenIndex,
           });
         });
     });
 
-    ipc.on('GET_DB_TX', (e, { currency, walletAddress }) => {
+    this.em.on('GET_DB_TX', (e, { currency, walletAddress }) => {
       this.TxDB.getAllByCurrency(currency, walletAddress)
         .then((rows) => {
           rows.forEach((tx) => {
@@ -241,59 +237,59 @@ class DBController {
             delete tx.id;
           });
 
-          this.window.send('GET_DB_TX', rows);
+          this.em.emit('GET_DB_TX', rows);
         });
     });
 
-    ipc.on('UPDATE_UTXO', (e, args) => {
+    this.em.on('UPDATE_UTXO', (e, args) => {
       Promise.all(args.map((utxoPayload) => this.UTXODB.insertUnspend(utxoPayload)))
         .then(() => {
-          atLog.debug('UPDATE_UTXO Success');
-          this.window.send('UPDATE_UTXO', { success: true });
+          console.log('UPDATE_UTXO Success');
+          this.em.emit('UPDATE_UTXO', { success: true });
         })
         .catch((e) => {
-          atLog.debug('UPDATE_UTXO Fail');
-          this.window.send('UPDATE_UTXO', { success: false });
+          console.log('UPDATE_UTXO Fail');
+          this.em.emit('UPDATE_UTXO', { success: false });
         });
     });
 
-    ipc.on('GET_UTXO', ({　uuid, deviceId, change　}) => {
+    this.em.on('GET_UTXO', ({ uuid, deviceId, change }) => {
       this.UTXODB.getUnspend({ uuid, deviceId, change })
         .then((row) => {
-          this.window.send('GET_UTXO', { success: true, data: row });
+          this.em.emit('GET_UTXO', { success: true, data: row });
         })
         .catch((e) => {
-          this.window.send('GET_UTXO', { success: false });
+          this.em.emit('GET_UTXO', { success: false });
         });
     });
 
-    ipc.on('GET_UUID', () => {
+    this.em.on('GET_UUID', () => {
       this.APPDB.getUUID()
         .then((row) => {
-          this.window.send('GET_UUID', { success: true, data: row.id });
+          this.em.emit('GET_UUID', { success: true, data: row.id });
         })
         .catch((e) => {
-          this.window.send('GET_UUID', { success: false });
+          this.em.emit('GET_UUID', { success: false });
         });
     });
 
-    ipc.on('UPDATE_CURRENT_ASSET', (e, { id, asset_symbol }) => {
+    this.em.on('UPDATE_CURRENT_ASSET', (e, { id, asset_symbol }) => {
       this.APPDB.updateAsset(id, asset_symbol)
         .then((row) => {
-          this.window.send('UPDATE_CURRENT_ASSET', { success: true });
+          this.em.emit('UPDATE_CURRENT_ASSET', { success: true });
         })
         .catch((e) => {
-          this.window.send('UPDATE_CURRENT_ASSET', { success: false });
+          this.em.emit('UPDATE_CURRENT_ASSET', { success: false });
         });
     });
 
-    ipc.on('GET_CURRENT_ASSET', (e, { id }) => {
+    this.em.on('GET_CURRENT_ASSET', (e, { id }) => {
       this.APPDB.getAsset(id)
         .then((row) => {
-          this.window.send('GET_CURRENT_ASSET', { success: true, asset_symbol: row.asset_symbol });
+          this.em.emit('GET_CURRENT_ASSET', { success: true, asset_symbol: row.asset_symbol });
         })
         .catch((e) => {
-          this.window.send('GET_CURRENT_ASSET', { success: false });
+          this.em.emit('GET_CURRENT_ASSET', { success: false });
         });
     });
 

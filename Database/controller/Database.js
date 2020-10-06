@@ -2,7 +2,6 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
 const { CHAIN_ENV } = require('../../env');
-const atLog = require('../ATWalletKit/at_log');
 
 const DBFILE = `ATDatabase-${CHAIN_ENV}.db`;
 
@@ -22,8 +21,8 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function (err) {
         if (err) {
-          atLog.debug(`Error running sql ${sql}`);
-          atLog.debug(err);
+          console.log(`Error running sql ${sql}`);
+          console.log(err);
           reject(err);
         } else {
           resolve({ id: this.lastID });
@@ -36,8 +35,8 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, result) => {
         if (err) {
-          atLog.debug(`Error running sql: ${sql}`);
-          atLog.debug(err);
+          console.log(`Error running sql: ${sql}`);
+          console.log(err);
           reject(err);
         } else {
           resolve(result);
@@ -50,8 +49,8 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) {
-          atLog.debug(`Error running sql: ${sql}`);
-          atLog.debug(err);
+          console.log(`Error running sql: ${sql}`);
+          console.log(err);
           reject(err);
         } else {
           resolve(rows);
