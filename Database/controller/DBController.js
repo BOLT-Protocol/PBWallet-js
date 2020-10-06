@@ -2,6 +2,7 @@ const axios = require('axios');
 const Emitter = require('events').EventEmitter;
 const DB = require('./Database');
 const ASSETDB = require('./AssetDatabase');
+const pbLog = require('../../lib/pb_log');
 
 let dbInstance;
 
@@ -73,11 +74,11 @@ class DBController {
       .then(() => this.APPDB.createTable())
       .then(() => this.AssetDB.createTable())
       .then(() => {
-        console.log('Create All Table Success');
+        pbLog.debug('Create All Table Success');
         return Promise.resolve(true);
       })
       .catch((e) => {
-        console.log('Create Fail', e);
+        pbLog.debug('Create Fail', e);
         return Promise.resolve(false);
       })
       .then((result) => {
@@ -103,18 +104,18 @@ class DBController {
           const expiredTime = Math.floor(nowTime) - 24 * 60 * 60 * 1000;
 
           if (updatTime && updatTime > expiredTime) {
-            console.log('GET_ASSETS find by catch');
+            pbLog.debug('GET_ASSETS find by catch');
 
             Promise.all([this.AssetDB.getAllryptoAsset(false), this.AssetDB.getAllryptoAsset(true)])
               .then(([fiatsData, assetsData]) => {
                 this.em.emit('GET_ASSETS', { success: true, fiatsData, assetsData });
               })
               .catch((e) => {
-                console.log('GET_ASSETS error:', e);
+                pbLog.debug('GET_ASSETS error:', e);
                 this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
               });
           } else {
-            console.log('GET_ASSETS catch timeout, update assetList');
+            pbLog.debug('GET_ASSETS catch timeout, update assetList');
             // catch timeout, update assetList
             Promise.all([
               this.AssetDB.updateAssetFetchCatchTimestamp(),
@@ -124,7 +125,7 @@ class DBController {
               .then(([updateCatch, fiatsResponse, asssetsResponse]) => {
                 if (!updateCatch.id) {
                 // update catch error, retry again
-                  console.log('update catch error, retry again!!!!!');
+                  pbLog.debug('update catch error, retry again!!!!!');
                   this.AssetDB.updateAssetFetchCatchTimestamp();
                 }
                 const fiatsData = fiatsResponse.data;
@@ -133,22 +134,22 @@ class DBController {
                 // write in db
                 Promise.all(assets.map((item) => this.AssetDB.updateAsset(item._id, item.assetId, item.cryptoType, item.name, item.originalSymbol)))
                   .then((res) => {
-                    console.log('updateAsset Success');
+                    pbLog.debug('updateAsset Success');
                     this.em.emit('GET_ASSETS', { success: true, fiatsData, assetsData });
                   })
                   .catch((e) => {
-                    console.log('updateAsset Fail');
+                    pbLog.debug('updateAsset Fail');
                     this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
                   });
               })
               .catch((e) => {
-                console.log('GET_ASSETS error:', e);
+                pbLog.debug('GET_ASSETS error:', e);
                 this.em.emit('GET_ASSETS', { success: false, fiatsData: [], assetsData: [] });
               });
           }
         })
         .catch((e) => {
-          console.log('GET_ASSETS find assetFeth catch time error:', e);
+          pbLog.debug('GET_ASSETS find assetFeth catch time error:', e);
           this.em.emit('GET_ASSETS', { success: false });
         });
     });
@@ -156,10 +157,10 @@ class DBController {
     this.em.on('UPDATE_TX', (e, args) => {
       Promise.all(args.map((tx) => this.TxDB.insert(tx)))
         .then((res) => {
-          console.log('Insert Success');
+          pbLog.debug('Insert Success');
         })
         .catch((e) => {
-          console.log('Insert Fail');
+          pbLog.debug('Insert Fail');
         });
     });
 
@@ -244,11 +245,11 @@ class DBController {
     this.em.on('UPDATE_UTXO', (e, args) => {
       Promise.all(args.map((utxoPayload) => this.UTXODB.insertUnspend(utxoPayload)))
         .then(() => {
-          console.log('UPDATE_UTXO Success');
+          pbLog.debug('UPDATE_UTXO Success');
           this.em.emit('UPDATE_UTXO', { success: true });
         })
         .catch((e) => {
-          console.log('UPDATE_UTXO Fail');
+          pbLog.debug('UPDATE_UTXO Fail');
           this.em.emit('UPDATE_UTXO', { success: false });
         });
     });

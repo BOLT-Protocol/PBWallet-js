@@ -1,5 +1,6 @@
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const pbLog = require('../../lib/pb_log');
 
 const { CHAIN_ENV } = require('../../env');
 
@@ -19,10 +20,10 @@ class Database {
 
   runDB(sql, params = []) {
     return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
+      this.db.run(sql, params, (err) => {
         if (err) {
-          console.log(`Error running sql ${sql}`);
-          console.log(err);
+          pbLog.debug(`Error running sql ${sql}`);
+          pbLog.debug(err);
           reject(err);
         } else {
           resolve({ id: this.lastID });
@@ -35,8 +36,8 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, result) => {
         if (err) {
-          console.log(`Error running sql: ${sql}`);
-          console.log(err);
+          pbLog.debug(`Error running sql: ${sql}`);
+          pbLog.debug(err);
           reject(err);
         } else {
           resolve(result);
@@ -49,8 +50,8 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) {
-          console.log(`Error running sql: ${sql}`);
-          console.log(err);
+          pbLog.debug(`Error running sql: ${sql}`);
+          pbLog.debug(err);
           reject(err);
         } else {
           resolve(rows);
