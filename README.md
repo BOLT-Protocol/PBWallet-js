@@ -1,0 +1,40 @@
+# PBWallet-js
+## Install
+```shell
+npm install pbwallet
+```
+
+## Events
+- sync start
+- sync progress
+- sync transaction
+- sync end
+- pendding transaction
+- confirmed transaction
+- sign transaction
+
+## function
+- constructor
+- initialize
+- setTestnet
+- createAccount
+- removeAccount
+- getAccountList
+- getReceivingAddress
+- getFee
+- sign
+- on
+
+## Use
+### initialize
+nodejs
+```javascript
+const PBWallet = require('pbwallet');
+const pbwallet = new PBWallet();
+```
+
+browser
+```javascript
+const PBWallet = require('pbwallet');
+const pbwallet = new PBWallet();
+```
