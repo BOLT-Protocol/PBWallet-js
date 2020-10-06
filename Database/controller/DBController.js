@@ -1,5 +1,4 @@
 const axios = require('axios');
-const Emitter = require('events').EventEmitter;
 const DB = require('./Database');
 const ASSETDB = require('./AssetDatabase');
 const pbLog = require('../../lib/pb_log');
@@ -55,11 +54,11 @@ const getAssets = async (uri) => axios({
 });
 
 class DBController {
-  constructor(App) {
+  constructor(App, eventEmitter) {
     this.App = App;
     this.DB = new DB(App);
     this.AssetDB = new ASSETDB(this.DB);
-    this.em = new Emitter();
+    this.em = eventEmitter;
   }
 
   createDB(name) {
