@@ -4,16 +4,7 @@
 npm install pbwallet
 ```
 
-## Events
-- sync start
-- sync progress
-- sync transaction
-- sync end
-- pendding transaction
-- confirmed transaction
-- sign transaction
-
-## function
+## Function
 - constructor
 - initialize
 - setTestnet
@@ -24,6 +15,15 @@ npm install pbwallet
 - getFee
 - sign
 - on
+
+## Events
+- sync start
+- sync progress
+- sync transaction
+- sync end
+- pendding transaction
+- confirmed transaction
+- sign transaction
 
 ## Use
 ### initialize
