@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "commit": "cz",
-    "postinstall": "husky install && npx husky add pre-commit \"npm test\"",
-    "test": "node_modules/.bin/eslint ."
+    "postinstall": "husky install && npx husky add pre-commit \"npm lint\"",
+    "lint": "node_modules/.bin/eslint .",
+    "test": "mocha --file test/**"
   },
   "repository": {
     "type": "git",
@@ -21,7 +22,9 @@
   "dependencies": {
     "axios": "^0.20.0",
     "log4js": "^6.3.0",
-    "sqlite3": "^5.0.0"
+    "sqlite": "^4.0.15",
+    "sqlite3": "^5.0.0",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "commitizen": "^4.2.1",

@@ -1,5 +1,5 @@
 const should = require('should');
-const pbWallet = require('../lib/pb_wallet');
+const pbWallet = require('../lib/PBWallet');
 
 describe('#test for mocha', () => {
   it('test', (done) => {
