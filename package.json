@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "commit": "cz",
-    "postinstall": "husky install && npx husky add pre-commit \"npm lint\"",
+    "postinstall": "husky install",
     "lint": "node_modules/.bin/eslint .",
     "test": "mocha --file test/**"
   },
@@ -32,7 +32,7 @@
     "eslint": "^7.10.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.1",
-    "husky": "^5.0.0-alpha.6",
+    "husky": "5.0.0-alpha.6",
     "mocha": "^8.1.3",
     "should": "^13.2.3"
   },

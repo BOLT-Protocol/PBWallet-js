@@ -118,5 +118,4 @@ dist
 
 # pbwallet
 .vscode
-.husky
 lib/Database/*.db
