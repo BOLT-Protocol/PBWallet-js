@@ -1,1 +1,1 @@
-module.exports = require('./lib/pb_wallet');
+module.exports = require('./lib/PBWallet');
