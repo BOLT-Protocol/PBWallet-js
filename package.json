@@ -21,6 +21,7 @@
   "homepage": "https://github.com/BOLT-Protocol/PBWallet-js#readme",
   "dependencies": {
     "axios": "^0.20.0",
+    "bignumber.js": "^9.0.1",
     "log4js": "^6.3.0",
     "sqlite": "^4.0.15",
     "sqlite3": "^5.0.0",
