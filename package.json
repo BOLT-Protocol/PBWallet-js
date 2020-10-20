@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "commit": "cz",
-    "postinstall": "husky install && npx husky add pre-commit \"npm lint\"",
+    "postinstall": "husky install",
     "lint": "node_modules/.bin/eslint .",
     "test": "mocha --file test/**"
   },
@@ -21,6 +21,13 @@
   "homepage": "https://github.com/BOLT-Protocol/PBWallet-js#readme",
   "dependencies": {
     "axios": "^0.20.0",
+    "bchaddrjs": "^0.4.9",
+    "bignumber.js": "^9.0.1",
+    "bip32": "^2.0.6",
+    "bip39": "^3.0.2",
+    "bitcoinjs-lib": "^5.2.0",
+    "bs58": "^4.0.1",
+    "ethereumjs-wallet": "^1.0.1",
     "log4js": "^6.3.0",
     "sqlite": "^4.0.15",
     "sqlite3": "^5.0.0",
@@ -32,14 +39,9 @@
     "eslint": "^7.10.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.1",
-    "husky": "^5.0.0-alpha.6",
+    "husky": "5.0.0-alpha.6",
     "mocha": "^8.1.3",
     "should": "^13.2.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "sh ./scripts/git-hool-precommit.sh"
-    }
   },
   "config": {
     "commitizen": {
