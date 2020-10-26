@@ -2,8 +2,8 @@ CREATE TABLE device (
 	id TEXT PRIMARY KEY,
 	user_id TEXT,
 	uniqueId TEXT UNIQUE,
-	db_version INTEGER NOT NULL,
-    authentication_way INTEGER
+	last_asset_sync_time INTEGER,
+	authentication_way INTEGER
 );
 
 CREATE TABLE user (
